@@ -26,9 +26,12 @@ import java.util.concurrent.BlockingQueue;
 
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AvroWriter implements Runnable {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(AvroWriter.class);
   private final DataFileWriter<GenericRecord> dataFileWriter;
   private final JdbcAvroMetering metering;
   private final BlockingQueue<ByteBuffer> queue;
@@ -45,6 +48,7 @@ public class AvroWriter implements Runnable {
   @Override
   public void run() {
     try {
+      int c = 0;
       while (true) {
         final ByteBuffer datum = queue.take();
         if (datum.capacity() == 0) {
@@ -52,6 +56,10 @@ public class AvroWriter implements Runnable {
           return;
         } else {
           this.dataFileWriter.appendEncoded(datum);
+          c++;
+        }
+        if ((c % 100000) == 0) {
+          LOGGER.info("Size={} remainingCapacity={}", queue.size(), queue.remainingCapacity());
         }
       }
     } catch (InterruptedException ex) {

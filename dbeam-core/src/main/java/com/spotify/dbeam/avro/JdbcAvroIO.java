@@ -210,8 +210,11 @@ public class JdbcAvroIO {
         final long startMs = metering.startWriteMeter();
         convertAllResultSet(resultSet, JdbcAvroRecordConverter.create(resultSet));
         queue.put(ByteBuffer.allocate(0)); // write final record, so that consumer stops
+        final long startMs2 = metering.startWriteMeter();
         future.get();
         executorService.shutdown();
+        logger.info(String.format("jdbcavroio : Waited %5.2f seconds for finishing write operation",
+                                  (System.currentTimeMillis() - startMs2) / 1000.0));
         this.metering.exposeWriteElapsedMs(System.currentTimeMillis() - startMs);
         this.metering.exposeWrittenBytes(this.countingOutputStream.getCount());
       }
