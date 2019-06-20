@@ -27,7 +27,7 @@ simply streams the table contents via JDBC into target location as Avro.
 
 ## dbeam-core package features
 
-- Support both PostgreSQL and MySQL JDBC connectors
+- Support both PostgreSQL, MySQL and Oracle JDBC connectors
 - Supports [Google CloudSQL](https://cloud.google.com/sql/) managed databases
 - Currently output only to Avro format
 - Reads database from an external password file (`--passwordFile`) or an external [KMS](https://cloud.google.com/kms/) encrypted password file (`--passwordFileKmsEncrypted`)
@@ -43,6 +43,9 @@ simply streams the table contents via JDBC into target location as Avro.
 - `--username`: the database user name
 - `--password`: the database password
 - `--passwordFile`: a path to a local file containing the database password
+- `--tableSchema`: set table schema if required
+- `--filterCondition`: set a filter condition to the SQL - ie: "update_ts >= date_sub(current_date, 15)" 
+- `--avroSchemaFile`: include a self-defined Avro Schema File
 - `--limit`: limit the output number of rows, indefinite by default
 - `--avroSchemaNamespace`: the namespace of the generated avro schema, `"dbeam_generated"` by default
 - `--exportTimeout`: maximum time the export can take, after this timeout the job is cancelled. Default is `PT0S` (no timeout).
@@ -84,6 +87,47 @@ In order to create a jar with all dependencies under `./dbeam-core/target/dbeam-
 mvn clean package -Ppack
 ```
 
+Build must include settings.xml that includes credentials to the Oracle OTN network:
+Instructions can be found here: [Build requirements](https://blogs.oracle.com/dev2dev/get-oracle-jdbc-drivers-and-ucp-from-oracle-maven-repository-without-ides--)
+```sh
+<settings>
+  <proxies>
+    <proxy>
+      <active>true</active>
+      <protocol>http</protocol>
+      <host>proxy.mycompany.com</host>
+      <nonProxyHosts>mycompany.com</nonProxyHosts>
+   </proxy>
+  </proxies>
+
+<servers>
+  <server>
+    <id>maven.oracle.com </id>
+    <username>firstname.lastname@test.com</username>
+    <password>{pnwmhVnzdM8H3UAneUKLmaHGZCoaprbMQ/Ac5UktvsM=}</password>
+  <configuration>
+    <basicAuthScope>
+      <host>ANY </host>
+      <port>ANY </port>
+      <realm>OAM 11g </realm>
+    </basicAuthScope>
+    <httpConfiguration>
+      <all>
+      <params>
+        <property>
+          <name>http.protocol.allow-circular-redirects </name>
+          <value>%b,true </value>
+        </property>
+      </params>
+      </all>
+    </httpConfiguration>
+  </configuration>
+  </server>
+  </servers>
+</settings>
+```
+
+
 ## Usage examples
 
 Using java from the command line:
@@ -123,6 +167,20 @@ java -cp ./dbeam-core/target/dbeam-core-shaded.jar \
   --password=secret \
   --connectionUrl=jdbc:postgresql://some.database.uri.example.org:5432/my_database \
   --table=my_table \
+  --limit=10 \
+  --skipPartitionCheck
+```
+
+Example using oracle:
+```sh
+java -cp ./dbeam-core/target/dbeam-core-shaded.jar \
+  com.spotify.dbeam.jobs.JdbcAvroJob \
+  --output=output-dir/ \
+  --username=my_database_username \
+  --password=secret \
+  --connectionUrl=jdbc:oracle:thin:@<hostname>:<port>/<service name> \
+  --table=my_table \
+  --tableSchema=my_table_schema \
   --limit=10 \
   --skipPartitionCheck
 ```
