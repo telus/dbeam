@@ -77,7 +77,7 @@ public class JdbcAvroMetering {
 
   public void exposeWriteElapsedMs(long elapsedMs) {
     logger.info(String.format("jdbcavroio : Read %d rows, took %5.2f seconds",
-                              rowCount, elapsedMs / 1000.0));
+        rowCount, elapsedMs / 1000.0));
     this.writeElapsedMs.inc(elapsedMs);
     if (rowCount > 0) {
       this.recordCount.inc((this.rowCount % countReportEvery));
@@ -97,7 +97,7 @@ public class JdbcAvroMetering {
 
   public void exposeExecuteQueryMs(long elapsedMs) {
     logger.info(String.format("jdbcavroio : Execute query took %5.2f seconds",
-                              elapsedMs / 1000.0));
+        elapsedMs / 1000.0));
     this.executeQueryElapsedMs.inc(elapsedMs);
   }
 }

@@ -63,8 +63,12 @@ public class JdbcAvroIO {
   private static final String DEFAULT_SHARD_TEMPLATE = ShardNameTemplate.INDEX_OF_MAX;
 
   public static PTransform<PCollection<String>, WriteFilesResult<Void>> createWrite(
-      String filenamePrefix, String filenameSuffix, Schema schema,
+      String filenamePrefix,
+      String filenameSuffix,
+      Schema schema,
       JdbcAvroArgs jdbcAvroArgs) {
+
+
     filenamePrefix = filenamePrefix.replaceAll("/+$", "") + "/part";
     ValueProvider<ResourceId> prefixProvider =
         StaticValueProvider.of(FileBasedSink.convertToFileResourceIfPossible(filenamePrefix));
@@ -77,9 +81,12 @@ public class JdbcAvroIO {
 
     final DynamicAvroDestinations<String, Void, String>
         destinations =
-        AvroIO.constantDestinations(filenamePolicy, schema, ImmutableMap.of(),
-                                    jdbcAvroArgs.getCodecFactory(),
-                                    SerializableFunctions.identity());
+        AvroIO.constantDestinations(filenamePolicy,
+            schema,
+            ImmutableMap.of(),
+            jdbcAvroArgs.getCodecFactory(),
+            SerializableFunctions.identity());
+
     final FileBasedSink<String, Void, String> sink = new JdbcAvroSink<>(
         prefixProvider,
         destinations,
@@ -94,8 +101,8 @@ public class JdbcAvroIO {
     private final JdbcAvroArgs jdbcAvroArgs;
 
     JdbcAvroSink(ValueProvider<ResourceId> filenamePrefix,
-                            DynamicAvroDestinations<UserT, Void, String> dynamicDestinations,
-                            JdbcAvroArgs jdbcAvroArgs) {
+                 DynamicAvroDestinations<UserT, Void, String> dynamicDestinations,
+                 JdbcAvroArgs jdbcAvroArgs) {
       super(filenamePrefix, dynamicDestinations, Compression.UNCOMPRESSED);
       this.dynamicDestinations = dynamicDestinations;
       this.jdbcAvroArgs = jdbcAvroArgs;
@@ -138,8 +145,8 @@ public class JdbcAvroIO {
     private JdbcAvroMetering metering;
 
     JdbcAvroWriter(FileBasedSink.WriteOperation<Void, String> writeOperation,
-                          DynamicAvroDestinations<?, Void, String> dynamicDestinations,
-                          JdbcAvroArgs jdbcAvroArgs) {
+                   DynamicAvroDestinations<?, Void, String> dynamicDestinations,
+                   JdbcAvroArgs jdbcAvroArgs) {
       super(writeOperation, MimeTypes.BINARY);
       this.dynamicDestinations = dynamicDestinations;
       this.jdbcAvroArgs = jdbcAvroArgs;
@@ -168,7 +175,7 @@ public class JdbcAvroIO {
 
     private ResultSet executeQuery(String query) throws Exception {
       checkArgument(connection != null,
-                    "JDBC connection was not properly created");
+          "JDBC connection was not properly created");
       PreparedStatement statement = connection.prepareStatement(
           query,
           ResultSet.TYPE_FORWARD_ONLY,
@@ -190,19 +197,22 @@ public class JdbcAvroIO {
     @Override
     public void write(String query) throws Exception {
       checkArgument(dataFileWriter != null,
-                    "Avro DataFileWriter was not properly created");
+          "Avro DataFileWriter was not properly created");
       logger.info("jdbcavroio : Starting write...");
       Schema schema = dynamicDestinations.getSchema(getDestination());
       try (ResultSet resultSet = executeQuery(query)) {
         checkArgument(resultSet != null,
-                      "JDBC resultSet was not properly created");
+            "JDBC resultSet was not properly created");
         final Map<Integer, JdbcAvroRecord.SqlFunction<ResultSet, Object>>
             mappings = JdbcAvroRecord.computeAllMappings(resultSet);
         final int columnCount = resultSet.getMetaData().getColumnCount();
         long startMs = metering.startWriteMeter();
         while (resultSet.next()) {
           final GenericRecord genericRecord = JdbcAvroRecord.convertResultSetIntoAvroRecord(
-              schema, resultSet, mappings, columnCount);
+              schema,
+              resultSet,
+              mappings,
+              columnCount);
           this.dataFileWriter.append(genericRecord);
           this.metering.incrementRecordCount();
         }

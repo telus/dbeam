@@ -51,6 +51,7 @@ public class JdbcExportArgsFactory {
         jdbcAvroArgs,
         createQueryArgs(exportOptions),
         exportOptions.getAvroSchemaNamespace(),
+        Optional.ofNullable(exportOptions.getAvroSchemaFile()),
         Optional.ofNullable(exportOptions.getAvroDoc()),
         exportOptions.isUseAvroLogicalTypes(),
         Duration.parse(exportOptions.getExportTimeout())
@@ -75,12 +76,14 @@ public class JdbcExportArgsFactory {
     }
     return QueryBuilderArgs.create(options.getTable())
         .builder()
+        .setTableSchema(Optional.ofNullable(options.getTableSchema()))
         .setLimit(Optional.ofNullable(options.getLimit()))
         .setPartitionColumn(partitionColumn)
         .setPartition(partition)
         .setPartitionPeriod(partitionPeriod)
         .setSplitColumn(Optional.ofNullable(options.getSplitColumn()))
         .setQueryParallelism(Optional.ofNullable(options.getQueryParallelism()))
+        .setFilterCondition(Optional.ofNullable(options.getFilterCondition()))
         .build();
   }
 

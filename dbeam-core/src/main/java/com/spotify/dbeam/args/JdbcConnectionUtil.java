@@ -30,6 +30,7 @@ public class JdbcConnectionUtil {
   private static Map<String, String> driverMapping =
       ImmutableMap.of(
           "postgresql", "org.postgresql.Driver",
+          "oracle", "oracle.jdbc.driver.OracleDriver",
           "mysql", "com.mysql.jdbc.Driver",
           "h2", "org.h2.Driver"
       );
@@ -43,6 +44,7 @@ public class JdbcConnectionUtil {
         "Invalid jdbc connection URL: %s. Expect jdbc:postgresql or jdbc:mysql as prefix.",
         url
     );
+
     return Class.forName(driverMapping.get(parts[1])).getCanonicalName();
   }
 }

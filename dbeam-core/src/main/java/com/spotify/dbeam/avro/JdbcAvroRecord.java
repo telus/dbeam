@@ -45,9 +45,12 @@ import static java.sql.Types.TINYINT;
 import static java.sql.Types.VARBINARY;
 import static java.sql.Types.VARCHAR;
 
+import com.github.javafaker.Faker;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.hash.Hashing;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -68,17 +71,42 @@ public class JdbcAvroRecord {
   private static final Calendar CALENDAR = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
 
   public static GenericRecord convertResultSetIntoAvroRecord(
-      Schema schema, ResultSet resultSet, Map<Integer, SqlFunction<ResultSet, Object>> mappings,
-      int columnCount)
-      throws SQLException {
+      Schema schema,
+      ResultSet resultSet,
+      Map<Integer, SqlFunction<ResultSet, Object>> mappings,
+      int columnCount) throws SQLException {
+    //System.out.println("SCHEMA!!!!!!!!!!!!!!!!!!!!!!!!!: " + schema.toString());
     final GenericRecord record = new GenericData.Record(schema);
     for (int i = 1; i <= columnCount; i++) {
       final Object value = mappings.get(i).apply(resultSet);
       if (!(value == null || resultSet.wasNull())) {
-        record.put(i - 1, value);
+        record.put(i - 1,
+            fakeOrHashField(record.getSchema().getFields().get(i - 1).doc(), value));
       }
     }
+    //System.out.println("RECORD!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!: " + record.toString());
     return record;
+  }
+
+  private static Object fakeOrHashField(String avroDoc, Object value) {
+    if (avroDoc.contains("#lorem")) {
+      return new Faker().lorem().word();
+    }
+    if (avroDoc.contains("#idnum")) {
+      return new Faker().idNumber().toString();
+    }
+    if (avroDoc.contains("#datetime")) {
+      return new Faker().date().toString();
+    }
+    if (avroDoc.contains("#name")) {
+      return new Faker().name().fullName();
+    }
+    if (avroDoc.contains("#hash")) {
+      return Hashing.sha256()
+          .hashString(value.toString(), StandardCharsets.UTF_8).toString();
+    } else {
+      return value;
+    }
   }
 
   public static Map<Integer, SqlFunction<ResultSet, Object>> computeAllMappings(ResultSet resultSet)

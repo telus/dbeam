@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 public class ExceptionHandling {
 
-  private static Logger LOGGER = LoggerFactory.getLogger(ExceptionHandling.class);
+  private static Logger logger = LoggerFactory.getLogger(ExceptionHandling.class);
 
   private static final Map<Class<? extends Throwable>, Integer> EXIT_CODES =
       ImmutableMap.of(
@@ -44,7 +44,7 @@ public class ExceptionHandling {
       );
 
   public static void handleException(Throwable e) {
-    LOGGER.error("Failure: ", e);
+    logger.error("Failure: ", e);
     System.exit(exitCode(e));
   }
 

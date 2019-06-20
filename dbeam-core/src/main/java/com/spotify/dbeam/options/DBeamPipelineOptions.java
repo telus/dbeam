@@ -38,6 +38,18 @@ public interface DBeamPipelineOptions extends PipelineOptions {
 
   void setTable(String value);
 
+  @Description("The database table schema to query and perform the export.")
+  @Validation.Required
+  String getTableSchema();
+
+  void setTableSchema(String value);
+
+  @Description("Set a WHERE clause condition in the query using --filterCondition")
+  @Default.String("")
+  String getFilterCondition();
+
+  void setFilterCondition(String filterCondition);
+
   @Description("The database user name used by JDBC to authenticate.")
   @Default.String("dbeam-extractor")
   String getUsername();
@@ -50,7 +62,7 @@ public interface DBeamPipelineOptions extends PipelineOptions {
   void setPasswordFile(String value);
 
   @Description("A path to a file containing the database password, "
-               + "KMS encrypted and base64 encoded.")
+      + "KMS encrypted and base64 encoded.")
   String getPasswordFileKmsEncrypted();
 
   void setPasswordFileKmsEncrypted(String value);

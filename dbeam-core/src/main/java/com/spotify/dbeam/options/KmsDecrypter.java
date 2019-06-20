@@ -156,8 +156,8 @@ public abstract class KmsDecrypter {
     final JsonFactory jsonFactory = jsonFactory().orElseGet(Utils::getDefaultJsonFactory);
     final GoogleCredential googleCredential =
         credentials().isPresent()
-        ? credentials().get()
-        : GoogleCredential.getApplicationDefault(transport, jsonFactory);
+            ? credentials().get()
+            : GoogleCredential.getApplicationDefault(transport, jsonFactory);
     return KmsDecrypter.kms(transport, jsonFactory, googleCredential);
   }
 

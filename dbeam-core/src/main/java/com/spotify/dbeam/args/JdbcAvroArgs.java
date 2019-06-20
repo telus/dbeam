@@ -2,7 +2,7 @@
  * -\-\-
  * DBeam Core
  * --
- * Copyright (C) 2016 - 2018 Spotify AB
+ * Copyright (C) 2016 - 2019 Spotify AB
  * --
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,9 +33,26 @@ import org.apache.avro.file.CodecFactory;
 @AutoValue
 public abstract class JdbcAvroArgs implements Serializable {
 
+  public static JdbcAvroArgs create(JdbcConnectionArgs jdbcConnectionArgs,
+                                    int fetchSize,
+                                    String avroCodec) {
+    Preconditions.checkArgument(avroCodec.matches("snappy|deflate[1-9]"),
+        "Avro codec should be snappy or deflate1, .., deflate9");
+    return new AutoValue_JdbcAvroArgs.Builder()
+        .setJdbcConnectionConfiguration(jdbcConnectionArgs)
+        .setFetchSize(fetchSize)
+        .setAvroCodec(avroCodec)
+        .build();
+  }
+
+  public static JdbcAvroArgs create(JdbcConnectionArgs jdbcConnectionArgs) {
+    return create(jdbcConnectionArgs, 10000, "deflate6");
+  }
+
   public abstract JdbcConnectionArgs jdbcConnectionConfiguration();
 
-  @Nullable public abstract StatementPreparator statementPreparator();
+  @Nullable
+  public abstract StatementPreparator statementPreparator();
 
   public abstract int fetchSize();
 
@@ -52,6 +69,10 @@ public abstract class JdbcAvroArgs implements Serializable {
     throw new IllegalArgumentException("Invalid avroCodec " + avroCodec());
   }
 
+  public interface StatementPreparator extends Serializable {
+    void setParameters(PreparedStatement preparedStatement) throws Exception;
+  }
+
   @AutoValue.Builder
   abstract static class Builder {
 
@@ -64,24 +85,5 @@ public abstract class JdbcAvroArgs implements Serializable {
     abstract Builder setAvroCodec(String avroCodec);
 
     abstract JdbcAvroArgs build();
-  }
-
-  public static JdbcAvroArgs create(JdbcConnectionArgs jdbcConnectionArgs,
-                                    int fetchSize, String avroCodec) {
-    Preconditions.checkArgument(avroCodec.matches("snappy|deflate[1-9]"),
-                          "Avro codec should be snappy or deflate1, .., deflate9");
-    return new AutoValue_JdbcAvroArgs.Builder()
-        .setJdbcConnectionConfiguration(jdbcConnectionArgs)
-        .setFetchSize(fetchSize)
-        .setAvroCodec(avroCodec)
-        .build();
-  }
-
-  public static JdbcAvroArgs create(JdbcConnectionArgs jdbcConnectionArgs) {
-    return create(jdbcConnectionArgs, 10000, "deflate6");
-  }
-
-  public interface StatementPreparator extends Serializable {
-    void setParameters(PreparedStatement preparedStatement) throws Exception;
   }
 }
