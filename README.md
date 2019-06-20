@@ -88,7 +88,7 @@ mvn clean package -Ppack
 ```
 
 Build must include settings.xml that includes credentials to the Oracle OTN network:
-Instructions can be found here: [Build requirements](https://blogs.oracle.com/dev2dev/get-oracle-jdbc-drivers-and-ucp-from-oracle-maven-repository-without-ides--)
+Instructions can be found here: [Build requirements](https://blogs.oracle.com/dev2dev/get-oracle-jdbc-drivers-and-ucp-from-oracle-maven-repository-without-ides)
 ```sh
 <settings>
   <proxies>
